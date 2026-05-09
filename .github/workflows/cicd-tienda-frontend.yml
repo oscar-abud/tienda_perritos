@@ -3,7 +3,7 @@ name: CI/CD Tienda Perritos - Frontend
 on:
   push:
     branches: [ "main" ]
-    paths:
+    parent_paths:
       - "frontend/**"
 
 jobs:
@@ -32,6 +32,9 @@ jobs:
         docker tag tienda-frontend:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
         docker push ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
 
+    - name: Pausa de estabilización SSM
+      run: sleep 60
+
     - name: Desplegar Frontend vía SSM
       run: |
         aws ssm send-command \
@@ -40,10 +43,12 @@ jobs:
           --comment "Actualizar tienda-frontend desde ECR" \
           --parameters '{"commands":[
             "set -e",
-            "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
-            "docker pull ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest",
-            "docker stop tienda-frontend || true",
-            "docker rm tienda-frontend || true",
-            "docker run -d --name tienda-frontend -p 80:80 ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest"
+            "export PATH=$PATH:/usr/local/bin",
+            "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
+            "sudo docker pull ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest",
+            "sudo docker stop tienda-frontend || true",
+            "sudo docker rm tienda-frontend || true",
+            "sudo docker run -d --name tienda-frontend -p 80:80 ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest"
           ]}' \
           --output text
+          
