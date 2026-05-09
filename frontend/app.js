@@ -13,6 +13,7 @@ const API_BASE = "/api/productos";
 let editandoId = null;
 
 
+
 const tbody = document.getElementById("tbodyProductos");
 const btnCargar = document.getElementById("btnCargar");
 const btnGuardar = document.getElementById("btnGuardar");
